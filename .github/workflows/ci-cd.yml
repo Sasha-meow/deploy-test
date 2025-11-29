@@ -31,6 +31,13 @@ jobs:
       - name: ✅ Запуск тестов
         run: npm test
 
+      - name: 📊 Формирование отчета по тестированию
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-${{ matrix.os }}-node-${{ matrix.node-version }}
+          path: coverage/
+          retention-days: 7
+
       - name: 🏗️ Проверка сборки
         run: |
           echo "Проверка запуска приложения на ${{ matrix.os }} с Node ${{ matrix.node-version }}..."
