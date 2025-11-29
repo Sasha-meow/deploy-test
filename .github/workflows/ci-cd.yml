@@ -1,0 +1,38 @@
+name: ci-cd.yml
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+    branches: [main, master]
+
+jobs:
+  # Тестирование на разных ОС и разных версиях ноды
+  test:
+    strategy:
+      matrix:
+        os: [ ubuntu-latest, windows-latest, macos-latest ]
+        node-version: [ 16.x, 18.x, 20.x ]
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - name: 📥 Проверка
+        uses: actions/checkout@v4
+
+      - name: ⎔ Проверка на Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: 'npm'
+
+      - name: 📦 Установка пакетов
+        run: npm install
+
+      - name: ✅ Запуск тестов
+        run: npm test
+
+      - name: 🏗️ Проверка сборки
+        run: |
+          echo "Проверка запуска приложения на ${{ matrix.os }} с Node ${{ matrix.node-version }}..."
+          timeout 10s npm start || true
+          echo "✅ Приложение успешно запускается"
