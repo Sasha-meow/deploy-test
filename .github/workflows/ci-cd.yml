@@ -16,10 +16,10 @@ jobs:
     runs-on: ${{ matrix.os }}
 
     steps:
-      - name: 📥 Проверка
+      - name: 📥 Копирование репозитория на ВМ
         uses: actions/checkout@v4
 
-      - name: ⎔ Проверка на Node.js ${{ matrix.node-version }}
+      - name: ⎔ Установка Node.js ${{ matrix.node-version }}
         uses: actions/setup-node@v4
         with:
           node-version: ${{ matrix.node-version }}
@@ -36,3 +36,43 @@ jobs:
           echo "Проверка запуска приложения на ${{ matrix.os }} с Node ${{ matrix.node-version }}..."
           timeout 10s npm start || true
           echo "✅ Приложение успешно запускается"
+
+
+  # Деплой на Render
+  deploy:
+    needs: test
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'
+
+    steps:
+      - name: 📥 Копирование репозитория на ВМ
+        uses: actions/checkout@v4
+
+      - name: ⎔ Установка Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18.x'
+          cache: 'npm'
+
+      - name: 📦 Установка пакетов
+        run: npm install
+
+      - name: ✅ Запуск тестов
+        run: npm test
+
+      - name: 🚀 Деплой на Render
+        uses: johnbeynon/render-deploy-action@v0.0.8
+        with:
+          service-id: ${{ secrets.RENDER_SERVICE_ID }}
+          api-key: ${{ secrets.RENDER_API_KEY }}
+
+      - name: ⏳ Wait for deployment
+        run: |
+          echo "Ожидание завершения деплоя..."
+          sleep 30
+
+      - name: ✅ Verify deployment
+        run: |
+          APP_URL="${{ secrets.RENDER_APP_URL }}"
+          echo "Проверка приложения по адресу: $APP_URL"
+          curl -f $APP_URL && echo "✅ Деплой успешен!" || echo "❌ Ошибка деплоя"
