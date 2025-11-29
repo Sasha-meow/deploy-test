@@ -48,6 +48,7 @@ class ApplicationServer {
                         <p><strong>Платформа:</strong> ${serverInfo.platform}</p>
                         <p><strong>Текущее время:</strong> ${serverInfo.timestamp}</p>
                         <p><strong>Коммит:</strong> ${serverInfo.commit}</p>
+                        <p>Проверка автоматического деплоя</p>
                     </div>
                 </div>
             </body>
