@@ -49,7 +49,9 @@ jobs:
                 timeout 10s npm start || true
               
               elif [[ "${{ matrix.os }}" == "windows-latest" ]]; then
-                cmd //c "start /B npm start && timeout /t 10 && taskkill /f /im node.exe >nul 2>&1"
+                npm start &
+                Start-Sleep -Seconds 10
+                taskkill /f /im node.exe >nul 2>&1
               
               elif [[ "${{ matrix.os }}" == "macos-latest" ]]; then
                 npm start &
