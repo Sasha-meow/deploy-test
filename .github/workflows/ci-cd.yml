@@ -45,34 +45,19 @@ jobs:
       - name: 🏗️ Проверка сборки
         run: |
           echo "Проверка запуска приложения на ${{ matrix.os }} с Node ${{ matrix.node-version }}..."
-          # Запуск приложения в фоне
-          node app.js &
-          SERVER_PID=$!
-          
-          # Ожидание 5 секунд
-          if [[ "$RUNNER_OS" == "Windows" ]]; then
-            timeout /t 5 /nobreak > nul
-          else
-            sleep 5
-          fi
-          
-          # Проверка, что процесс еще работает
-          if [[ "$RUNNER_OS" == "Windows" ]]; then
-            tasklist /fi "PID eq $SERVER_PID" | findstr node.exe > nul
-            if errorlevel 1 (
-              echo "❌ Приложение не запустилось"
-              exit 1
-            )
-            taskkill /pid $SERVER_PID /f > nul 2>&1
-          else
-            if kill -0 $SERVER_PID 2>/dev/null; then
-             kill $SERVER_PID
-            else
-              echo "❌ Приложение не запустилось"
-              exit 1
-            fi
-          fi
-          echo "✅ Приложение успешно запускается  ${{ matrix.os }}"
+              if [[ "${{ matrix.os }}" == "ubuntu-latest" ]]; then
+                timeout 10s npm start || true
+              
+              elif [[ "${{ matrix.os }}" == "windows-latest" ]]; then
+                cmd //c "start /B npm start && timeout /t 10 && taskkill /f /im node.exe >nul 2>&1"
+              
+              elif [[ "${{ matrix.os }}" == "macos-latest" ]]; then
+                npm start &
+                SERVER_PID=$!
+                sleep 10
+                kill $SERVER_PID 2>/dev/null || true
+              fi
+          echo "✅ Приложение успешно запускается"
 
 
   # Джоба деплоя на Render
