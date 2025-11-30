@@ -91,12 +91,12 @@ jobs:
           service-id: ${{ secrets.RENDER_SERVICE_ID }}
           api-key: ${{ secrets.RENDER_API_KEY }}
 
-      - name: ⏳ Wait for deployment
+      - name: ⏳ Ожидание деплоя
         run: |
           echo "Ожидание завершения деплоя..."
           sleep 30
 
-      - name: ✅ Verify deployment
+      - name: ✅ Проверка деплоя
         run: |
           APP_URL="${{ secrets.RENDER_APP_URL }}"
           echo "Проверка приложения по адресу: $APP_URL"
