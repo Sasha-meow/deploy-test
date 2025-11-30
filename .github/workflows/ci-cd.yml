@@ -1,20 +1,24 @@
+# Название пайплайна
 name: ci-cd.yml
 
+# Триггеры пайплайна
 on:
   push:
-    branches: [main, master]
+    branches: [main, master]    # При пуше в main или master ветки
   pull_request:
-    branches: [main, master]
+    branches: [main, master]    # При создании pull request в main или master ветки
 
+# Джобы, которые выполняются в пайплайне
 jobs:
-  # Тестирование на разных ОС и разных версиях ноды
+  # Джоба тестирования на разных ОС и разных версиях ноды
   test:
     strategy:
       matrix:
-        os: [ ubuntu-latest, windows-latest, macos-latest ]
-        node-version: [ 16.x, 18.x, 20.x ]
-    runs-on: ${{ matrix.os }}
+        os: [ ubuntu-latest, windows-latest, macos-latest ]   # 3 операционные системы
+        node-version: [ 16.x, 18.x, 20.x ]    # 3 версии Node.js
+    runs-on: ${{ matrix.os }}   # Запускать на каждой ОС из матрицы
 
+    # Шаги джобы тестирования
     steps:
       - name: 📥 Копирование репозитория на ВМ
         uses: actions/checkout@v4
@@ -25,7 +29,7 @@ jobs:
           node-version: ${{ matrix.node-version }}
           cache: 'npm'
 
-      - name: 📦 Установка пакетов
+      - name: 📦 Установка npm-пакетов
         run: npm install
 
       - name: ✅ Запуск тестов
@@ -34,9 +38,9 @@ jobs:
       - name: 📊 Формирование отчета по тестированию
         uses: actions/upload-artifact@v4
         with:
-          name: coverage-${{ matrix.os }}-node-${{ matrix.node-version }}
+          name: coverage-${{ matrix.os }}-node-${{ matrix.node-version }}   # Формирует уникальное имя для каждого сочетания ОС/Node
           path: coverage/
-          retention-days: 7
+          retention-days: 7   # Хранит артефакты 7 дней
 
       - name: 🏗️ Проверка сборки
         run: |
@@ -45,11 +49,11 @@ jobs:
           echo "✅ Приложение успешно запускается"
 
 
-  # Деплой на Render
+  # Джоба деплоя на Render
   deploy:
-    needs: test
+    needs: test   # Запускать только после успешного завершения задачи test
     runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'
+    if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'    # Запускать только для main/master веток
 
     steps:
       - name: 📥 Копирование репозитория на ВМ
@@ -61,7 +65,7 @@ jobs:
           node-version: '18.x'
           cache: 'npm'
 
-      - name: 📦 Установка пакетов
+      - name: 📦 Установка npm-пакетов
         run: npm install
 
       - name: ✅ Запуск тестов
