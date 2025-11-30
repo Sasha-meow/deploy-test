@@ -45,21 +45,16 @@ jobs:
       - name: 🏗️ Проверка сборки
         run: |
           echo "Проверка запуска приложения на ${{ matrix.os }} с Node ${{ matrix.node-version }}..."
-              if [[ "${{ matrix.os }}" == "ubuntu-latest" ]]; then
-                timeout 10s npm start || true
-              
-              elif [[ "${{ matrix.os }}" == "windows-latest" ]]; then
-                npm start &
-                Start-Sleep -Seconds 10
-                taskkill /f /im node.exe >nul 2>&1
-              
-              elif [[ "${{ matrix.os }}" == "macos-latest" ]]; then
-                npm start &
-                SERVER_PID=$!
-                sleep 10
-                kill $SERVER_PID 2>/dev/null || true
-              fi
+            npm start &
+            SERVER_PID=$!
+            sleep 5
+            kill $SERVER_PID 2>/dev/null || true
           echo "✅ Приложение успешно запускается"
+
+      - name: 🏗️ Дополнительная очистка для Windows
+        if: matrix.os == 'windows-latest'
+        run: |
+          taskkill /f /im node.exe >nul 2>&1 || true
 
 
   # Джоба деплоя на Render
