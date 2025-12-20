@@ -1,0 +1,79 @@
+# Название пайплайна
+name: security.yml
+
+# Триггеры пайплайна
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]   # При пуше в main или master ветки
+
+# Джобы, которые выполняются в пайплайне
+jobs:
+  # Джоба билда
+  build:
+    runs-on: ubuntu-latest
+    name: 📊 Джоба генерации SBOM
+
+    # Шаги джобы билда
+    steps:
+      - name: 📥 Копирование репозитория на ВМ
+        uses: actions/checkout@v4
+
+      - name: ⎔ Установка Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: 📦 Установка npm-пакетов
+        run: npm ci
+
+      - name: 🏗️ Генерация SBOM (CycloneDX)
+        run: npx @cyclonedx/cyclonedx-npm --output-file sbom.json
+
+      - name: ✅ Создание SBOM-артефакта
+        uses: actions/upload-artifact@v4
+        with:
+          name: security-artifacts
+          path: sbom.json
+          retention-days: 7
+
+  # Джоба анализа кода
+  security:
+    runs-on: ubuntu-latest
+    name: Джоба анализа кода
+    needs: build    # Запускается только после успешной генерации SBOM
+    steps:
+      - name: 📥 Копирование репозитория на ВМ
+        uses: actions/checkout@v4
+
+      - name: ⎔ Установка Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: 📦 Установка npm-пакетов
+        run: npm ci
+
+      - name: 📦 Загрузка ранее созданного артефакта SBOM
+        uses: actions/download-artifact@v4
+        with:
+          name: security-artifacts
+          path: .
+
+      - name: 📊 Запуск OWASP Dependency Check
+        uses: dependency-check/Dependency-Check_Action@main
+        with:
+          project: '${{ github.event.repository.name }}'
+          path: '.'
+          format: 'HTML'
+          out: 'reports'
+          args: '--disableOssIndex --scan .'
+
+      - name: ✅ Сохранение отчёта как артефакта
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: dependency-check-report
+          path: reports/
+          retention-days: 7
