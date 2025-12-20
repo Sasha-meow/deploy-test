@@ -46,6 +46,15 @@ jobs:
       - name: 📥 Копирование репозитория на ВМ
         uses: actions/checkout@v4
 
+      - name: ⎔ Установка Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: 📦 Установка npm-пакетов
+        run: npm ci
+
       - name: 📦 Загрузка ранее созданного артефакта SBOM
         uses: actions/download-artifact@v4
         with:
